@@ -41,9 +41,8 @@ using GetSubTreeType = std::vector<
 
 constexpr std::chrono::microseconds dbusTimeout(5000);
 
-using Value = sdbusplus::message::variant<bool, uint8_t, int16_t, uint16_t,
-                                          int32_t, uint32_t, int64_t, uint64_t,
-                                          double, std::string>;
+using Value = std::variant<bool, uint8_t, int16_t, uint16_t, int32_t, uint32_t,
+                           int64_t, uint64_t, double, std::string>;
 
 enum class PSUState
 {

@@ -30,7 +30,7 @@
 #include <utility.hpp>
 
 static constexpr const bool debug = false;
-
+static constexpr const int retryCount = 3;
 static constexpr const std::array<const char*, 3> psuInterfaceTypes = {
     "xyz.openbmc_project.Configuration.pmbus",
     "xyz.openbmc_project.Configuration.PSUPresence",
@@ -43,7 +43,7 @@ static const constexpr char* coldRedundancyPath =
 static const constexpr char* rootPath = "/xyz/openbmc_project/CallbackManager";
 
 static std::vector<std::unique_ptr<PowerSupply>> powerSupplies;
-static std::vector<uint64_t> addrTable = {0x50, 0x51};
+static std::vector<uint64_t> addrTable = {0};
 static uint8_t psuRescanBus = 7;
 static int pingFd = -1;
 
@@ -53,9 +53,9 @@ ColdRedundancy::ColdRedundancy(
     std::vector<std::unique_ptr<sdbusplus::bus::match::match>>& matches) :
     sdbusplus::xyz::openbmc_project::Control::server::PowerSupplyRedundancy(
         *systemBus, coldRedundancyPath),
-    timerRotation(io), timerCheck(io), systemBus(systemBus),
-    warmRedundantTimer1(io), warmRedundantTimer2(io), keepAliveTimer(io),
-    filterTimer(io), puRedundantTimer(io), objServer(objectServer)
+    warmRedundantTimer(io), timerRotation(io), timerCheck(io),
+    systemBus(systemBus), keepAliveTimer(io), filterTimer(io),
+    puRedundantTimer(io), objServer(objectServer)
 {
     associationsOk.emplace_back("", "", "");
     associationsWarning.emplace_back("", "warning", coldRedundancyPath);
@@ -77,8 +77,10 @@ ColdRedundancy::ColdRedundancy(
     // set default configuration
     powerSupplyRedundancyEnabled(true);
     rotationEnabled(true);
-    periodOfRotation(7 * secondsInOneDay);
+    periodOfRotation(7 * oneDay);
     rotationAlgorithm(Algo::bmcSpecific);
+    rotationRankOrder({1, 2, 3, 4});
+    coldRedundancyStatus(Status::completed);
 
     // read configuration from settings service
     systemBus->async_method_call(
@@ -90,7 +92,7 @@ ColdRedundancy::ColdRedundancy(
             }
             auto period = std::get_if<uint32_t>(&propMap["PeriodOfRotation"]);
             auto redundancyEnabled =
-                std::get_if<bool>(&propMap["ColdRedundancyEnabled"]);
+                std::get_if<bool>(&propMap["PowerSupplyRedundancyEnabled"]);
             auto algorithm =
                 std::get_if<std::string>(&propMap["RotationAlgorithm"]);
             auto enabled = std::get_if<bool>(&propMap["RotationEnabled"]);
@@ -105,7 +107,17 @@ ColdRedundancy::ColdRedundancy(
                 return;
             }
 
-            periodOfRotation(*period);
+            if (*period >= minRotationPeriod && *period <= maxRotationPeriod)
+            {
+                periodOfRotation(*period);
+            }
+            else
+            {
+                std::cerr << "error invalid period, valid period is between ("
+                          << minRotationPeriod << "seconds) and ("
+                          << maxRotationPeriod << "seconds)\n";
+            }
+
             powerSupplyRedundancyEnabled(*redundancyEnabled);
             rotationAlgorithm(convertAlgoFromString(*algorithm));
             rotationEnabled(*enabled);
@@ -114,9 +126,6 @@ ColdRedundancy::ColdRedundancy(
             ColdRedundancy::configCR(false);
             timerRotation.cancel();
             startRotateCR();
-
-            // cache the rank order configuration
-            settingsOrder.assign(rankOrder->begin(), rankOrder->end());
         },
         "xyz.openbmc_project.Settings", coldRedundancyPath,
         "org.freedesktop.DBus.Properties", "GetAll",
@@ -148,8 +157,14 @@ ColdRedundancy::ColdRedundancy(
             });
         };
 
-    std::function<void(sdbusplus::message::message&)> paramConfig =
+    std::function<void(sdbusplus::message::message&)> refreshConfig =
         [this](sdbusplus::message::message& message) {
+            timerRotation.cancel();
+            startRotateCR();
+            timerCheck.cancel();
+            startCRCheck();
+            saveConfig();
+
             std::string objectName;
             boost::container::flat_map<
                 std::string, std::variant<bool, uint8_t, uint32_t, std::string,
@@ -159,36 +174,6 @@ ColdRedundancy::ColdRedundancy(
 
             for (auto& value : values)
             {
-                if (value.first == "ColdRedundancyEnabled")
-                {
-                    bool* pCREnabled = std::get_if<bool>(&(value.second));
-                    if (pCREnabled != nullptr)
-                    {
-                        powerSupplyRedundancyEnabled(*pCREnabled);
-                        ColdRedundancy::configCR(false);
-                    }
-                    continue;
-                }
-                if (value.first == "RotationEnabled")
-                {
-                    bool* pRotationEnabled = std::get_if<bool>(&(value.second));
-                    if (pRotationEnabled != nullptr)
-                    {
-                        rotationEnabled(*pRotationEnabled);
-                        ColdRedundancy::configCR(false);
-                    }
-                    continue;
-                }
-                if (value.first == "RotationAlgorithm")
-                {
-                    std::string* pAlgo =
-                        std::get_if<std::string>(&(value.second));
-                    if (pAlgo != nullptr)
-                    {
-                        rotationAlgorithm(convertAlgoFromString(*pAlgo));
-                    }
-                    continue;
-                }
                 if (value.first == "RotationRankOrder")
                 {
                     auto pRank =
@@ -197,16 +182,10 @@ ColdRedundancy::ColdRedundancy(
                     {
                         continue;
                     }
-                    uint8_t rankSize = pRank->size();
                     uint8_t index = 0;
-
-                    // cache the rank order configuration
-                    settingsOrder.assign(pRank->begin(), pRank->end());
-
-                    // apply the order to all psus
                     for (auto& psu : powerSupplies)
                     {
-                        if (index < rankSize)
+                        if (index < pRank->size())
                         {
                             psu->order = (*pRank)[index];
                         }
@@ -216,26 +195,10 @@ ColdRedundancy::ColdRedundancy(
                         }
                         index++;
                     }
-
-                    // store the settings data into dbus
-                    rotationRankOrder(settingsOrder);
                     ColdRedundancy::configCR(false);
 
-                    continue;
+                    break;
                 }
-                if (value.first == "PeriodOfRotation")
-                {
-                    uint32_t* pPeriod = std::get_if<uint32_t>(&(value.second));
-                    if (pPeriod != nullptr)
-                    {
-                        periodOfRotation(*pPeriod);
-                        timerRotation.cancel();
-                        startRotateCR();
-                    }
-                    continue;
-                }
-                std::cerr << "Unused property [" << value.first
-                          << "] changed\n";
             }
         };
 
@@ -316,14 +279,14 @@ ColdRedundancy::ColdRedundancy(
         matches.emplace_back(std::move(eventMatch));
     }
 
-    // monitor data change from settings service
+    // monitor data change from PSURedundancy service
     auto configParamMatch = std::make_unique<sdbusplus::bus::match::match>(
         static_cast<sdbusplus::bus::bus&>(*systemBus),
         "type='signal',member='PropertiesChanged',sender='xyz.openbmc_project."
-        "Settings', path_namespace='" +
+        "PSURedundancy', path_namespace='" +
             std::string(coldRedundancyPath) + "',arg0namespace='" +
             redundancyInterface + "'",
-        paramConfig);
+        refreshConfig);
     matches.emplace_back(std::move(configParamMatch));
 
     io.run();
@@ -398,6 +361,34 @@ void keepAlive(std::shared_ptr<sdbusplus::asio::connection>& dbusConnection)
     }
 }
 
+void ColdRedundancy::saveConfig(void)
+{
+    saveProperty("PowerSupplyRedundancyEnabled",
+                 powerSupplyRedundancyEnabled());
+    saveProperty("RotationEnabled", rotationEnabled());
+    saveProperty("RotationAlgorithm", convertAlgoToString(rotationAlgorithm()));
+    saveProperty("RotationRankOrder", rotationRankOrder());
+    saveProperty("PeriodOfRotation", periodOfRotation());
+}
+
+void ColdRedundancy::saveProperty(std::string propertyName,
+                                  crConfigVariant value)
+{
+    systemBus->async_method_call(
+        [this](const boost::system::error_code ec) {
+            if (ec)
+            {
+                std::cerr << "Failled to save config to Settings service\n";
+                return;
+            }
+        },
+        "xyz.openbmc_project.Settings",
+        "/xyz/openbmc_project/control/power_supply_redundancy",
+        "org.freedesktop.DBus.Properties", "Set",
+        "xyz.openbmc_project.Control.PowerSupplyRedundancy", propertyName,
+        value);
+}
+
 static const constexpr int psuDepth = 3;
 // Check PSU information from entity-manager D-Bus interface and use the bus
 // address to create PSU Class for cold redundancy.
@@ -405,9 +396,6 @@ void ColdRedundancy::createPSU(
     boost::asio::io_service& io, sdbusplus::asio::object_server& objectServer,
     std::shared_ptr<sdbusplus::asio::connection>& conn)
 {
-    numberOfPSU = 0;
-    powerSupplies.clear();
-
     // call mapper to get matched obj paths
     conn->async_method_call(
         [this, &conn](const boost::system::error_code ec,
@@ -539,10 +527,9 @@ void ColdRedundancy::createPSU(
                                 }
 
                                 uint8_t order = 0;
-
-                                if (numberOfPSU < settingsOrder.size())
+                                if (numberOfPSU < rotationRankOrder().size())
                                 {
-                                    order = settingsOrder[numberOfPSU];
+                                    order = rotationRankOrder()[numberOfPSU];
                                 }
 
                                 powerSupplies.emplace_back(
@@ -553,12 +540,6 @@ void ColdRedundancy::createPSU(
                                         order, conn));
 
                                 numberOfPSU++;
-                                std::vector<uint8_t> orders = {};
-                                for (auto& psu : powerSupplies)
-                                {
-                                    orders.push_back(psu->order);
-                                }
-                                rotationRankOrder(orders);
                             },
                             serviceName.c_str(), pathName.c_str(),
                             "org.freedesktop.DBus.Properties", "GetAll",
@@ -653,41 +634,47 @@ void ColdRedundancy::reRanking(void)
 
 void ColdRedundancy::configCR(bool reConfig)
 {
-    if (!crSupported || !powerSupplyRedundancyEnabled())
+    if (!crSupported || !powerSupplyRedundancyEnabled() ||
+        coldRedundancyStatus() == Status::inProgress)
     {
         return;
     }
+    timerRotation.cancel();
+    timerCheck.cancel();
+    startRotateCR();
+    startCRCheck();
+    coldRedundancyStatus(Status::inProgress);
     putWarmRedundant();
-    warmRedundantTimer2.expires_after(std::chrono::seconds(5));
-    warmRedundantTimer2.async_wait([this, reConfig](
-                                       const boost::system::error_code& ec) {
-        if (ec == boost::asio::error::operation_aborted)
-        {
-            return;
-        }
-        else if (ec)
-        {
-            std::cerr << "warm redundant timer error\n";
-            return;
-        }
 
-        if (reConfig)
-        {
-            reRanking();
-        }
-
-        for (auto& psu : powerSupplies)
-        {
-            if (psu->state == PSUState::normal && psu->order != 0)
+    warmRedundantTimer.expires_after(std::chrono::seconds(5));
+    warmRedundantTimer.async_wait(
+        [this, reConfig](const boost::system::error_code& ec) {
+            if (ec == boost::asio::error::operation_aborted)
             {
-                if (i2cSet(psu->bus, psu->address, pmbusCmdCRSupport,
-                           psu->order))
+                coldRedundancyStatus(Status::completed);
+                return;
+            }
+            else if (ec)
+            {
+                coldRedundancyStatus(Status::completed);
+                std::cerr << "warm redundant timer error\n";
+                return;
+            }
+
+            if (reConfig)
+            {
+                reRanking();
+            }
+
+            for (auto& psu : powerSupplies)
+            {
+                if (psu->state == PSUState::normal && psu->order != 0)
                 {
-                    std::cerr << "Failed to change PSU Cold Redundancy order\n";
+                    writePmbus(psu->bus, psu->address, psu->order);
                 }
             }
-        }
-    });
+            coldRedundancyStatus(Status::completed);
+        });
 }
 
 void ColdRedundancy::checkCR(void)
@@ -706,12 +693,8 @@ void ColdRedundancy::checkCR(void)
     {
         if (psu->state == PSUState::normal)
         {
-            int order = 0;
-            if (i2cGet(psu->bus, psu->address, pmbusCmdCRSupport, order))
-            {
-                std::cerr << "Failed to get PSU Cold Redundancy order\n";
-                continue;
-            }
+            int order = -1;
+            readPmbus(psu->bus, psu->address, order);
             if (order == 0)
             {
                 configCR(true);
@@ -745,19 +728,24 @@ void ColdRedundancy::startCRCheck()
 // rank order. And the PSU with last rank order will become the rank order 1
 void ColdRedundancy::rotateCR(void)
 {
-    if (!crSupported || !powerSupplyRedundancyEnabled())
+    if (!crSupported || !powerSupplyRedundancyEnabled() ||
+        coldRedundancyStatus() == Status::inProgress)
     {
         return;
     }
+    coldRedundancyStatus(Status::inProgress);
     putWarmRedundant();
-    warmRedundantTimer1.expires_after(std::chrono::seconds(5));
-    warmRedundantTimer1.async_wait([this](const boost::system::error_code& ec) {
+
+    warmRedundantTimer.expires_after(std::chrono::seconds(5));
+    warmRedundantTimer.async_wait([this](const boost::system::error_code& ec) {
         if (ec == boost::asio::error::operation_aborted)
         {
+            coldRedundancyStatus(Status::completed);
             return;
         }
         else if (ec)
         {
+            coldRedundancyStatus(Status::completed);
             std::cerr << "warm redundant timer error\n";
             return;
         }
@@ -783,10 +771,7 @@ void ColdRedundancy::rotateCR(void)
             {
                 psu->order = 1;
             }
-            if (i2cSet(psu->bus, psu->address, pmbusCmdCRSupport, psu->order))
-            {
-                std::cerr << "Failed to change PSU Cold Redundancy order\n";
-            }
+            writePmbus(psu->bus, psu->address, psu->order);
         }
 
         std::vector<uint8_t> orders = {};
@@ -795,6 +780,7 @@ void ColdRedundancy::rotateCR(void)
             orders.push_back(psu->order);
         }
         rotationRankOrder(orders);
+        coldRedundancyStatus(Status::completed);
     });
 }
 
@@ -828,13 +814,55 @@ void ColdRedundancy::putWarmRedundant(void)
     {
         if (psu->state == PSUState::normal)
         {
-            i2cSet(psu->bus, psu->address, pmbusCmdCRSupport, 0);
+            writePmbus(psu->bus, psu->address, 0);
         }
     }
 }
 
 PowerSupply::~PowerSupply()
 {
+}
+
+void ColdRedundancy::writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value)
+{
+    int i = 0;
+    int tmpValue = -1;
+
+    do
+    {
+        if (i > 0)
+        {
+            std::cerr << "i2cset retry: " + std::to_string(i) + "\n";
+        }
+
+        if (i2cSet(bus, slaveAddr, pmbusCmdCRSupport, value))
+        {
+            std::cerr << "Failed to call i2cset\n";
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (i2cGet(bus, slaveAddr, pmbusCmdCRSupport, tmpValue))
+        {
+            std::cerr << "Failed to call i2cget\n";
+            continue;
+        }
+    } while (i++ < retryCount && tmpValue != value);
+}
+
+void ColdRedundancy::readPmbus(uint8_t bus, uint8_t slaveAddr, int& value)
+{
+    int i = 0;
+    int ret = -1;
+    do
+    {
+        ret = i2cGet(bus, slaveAddr, pmbusCmdCRSupport, value);
+        if (ret)
+        {
+            std::cerr << "Failed to call i2cget, retry: " + std::to_string(i) +
+                             "\n";
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } while (i++ < retryCount && ret);
 }
 
 void ColdRedundancy::checkRedundancyEvent()

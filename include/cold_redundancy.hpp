@@ -20,9 +20,14 @@
 
 const constexpr char* psuInterface =
     "/xyz/openbmc_project/inventory/system/powersupply/";
-const constexpr int secondsInOneDay = 86400;
-
+const constexpr int oneDay = 86400;
+const constexpr int oneMonth = 30 * oneDay;
+const constexpr int minRotationPeriod = oneDay;
+const constexpr int maxRotationPeriod = 6 * oneMonth;
+constexpr const uint8_t pmbusCmdCRSupport = 0xd0;
 using Association = std::tuple<std::string, std::string, std::string>;
+using crConfigVariant =
+    std::variant<bool, uint8_t, uint32_t, std::vector<uint8_t>, std::string>;
 
 class ColdRedundancy
     : sdbusplus::xyz::openbmc_project::Control::server::PowerSupplyRedundancy
@@ -46,6 +51,7 @@ class ColdRedundancy
 
   private:
     bool crSupported = true;
+    bool isRotating = false;
     uint8_t psOrder;
     uint8_t numberOfPSU = 0;
     uint8_t redundancyPSURequire = 1;
@@ -59,16 +65,18 @@ class ColdRedundancy
     void reRanking(void);
     void putWarmRedundant(void);
     void keepAliveCheck(void);
-
-    void checkRedundancyEvent();
+    void writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value);
+    void readPmbus(uint8_t bus, uint8_t slaveAddr, int& value);
+    void checkRedundancyEvent(void);
+    void saveConfig(void);
+    void saveProperty(std::string propertyName, crConfigVariant value);
 
     sdbusplus::asio::object_server& objServer;
     std::shared_ptr<sdbusplus::asio::connection>& systemBus;
 
     boost::asio::steady_timer timerRotation;
+    boost::asio::steady_timer warmRedundantTimer;
     boost::asio::steady_timer timerCheck;
-    boost::asio::steady_timer warmRedundantTimer1;
-    boost::asio::steady_timer warmRedundantTimer2;
     boost::asio::steady_timer keepAliveTimer;
     boost::asio::steady_timer filterTimer;
     boost::asio::steady_timer puRedundantTimer;
@@ -79,8 +87,6 @@ class ColdRedundancy
     std::vector<Association> associationsNonCrit;
     std::vector<Association> associationsCrit;
 };
-
-constexpr const uint8_t pmbusCmdCRSupport = 0xd0;
 
 class PowerSupply
 {

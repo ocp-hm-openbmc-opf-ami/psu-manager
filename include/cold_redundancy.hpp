@@ -54,7 +54,6 @@ class ColdRedundancy
     bool isRotating = false;
     uint8_t psOrder;
     uint8_t numberOfPSU = 0;
-    uint8_t redundancyPSURequire = 1;
     std::vector<uint8_t> settingsOrder = {};
 
     void startRotateCR(void);

@@ -459,14 +459,12 @@ void ColdRedundancy::createPSU(
                                 if (interface == "xyz.openbmc_project."
                                                  "Configuration.PURedundancy")
                                 {
-                                    uint64_t* redunancyCount =
-                                        std::get_if<uint64_t>(
+                                    uint8_t* minNumNeeded =
+                                        std::get_if<uint8_t>(
                                             &propMap["RedundantCount"]);
-                                    if (redunancyCount != nullptr)
+                                    if (minNumNeeded != nullptr)
                                     {
-                                        redundancyPSURequire =
-                                            static_cast<uint8_t>(
-                                                *redunancyCount);
+                                        redundantCount(*minNumNeeded);
                                     }
                                     else
                                     {
@@ -887,7 +885,7 @@ void ColdRedundancy::checkRedundancyEvent()
 
         if (psuWorkable > psuPreviousWorkable)
         {
-            if (psuWorkable > redundancyPSURequire)
+            if (psuWorkable >= redundantCount())
             {
                 if (psuWorkable == numberOfPSU)
                 {
@@ -898,7 +896,7 @@ void ColdRedundancy::checkRedundancyEvent()
                         "OpenBMC.0.1.PowerUnitRedundancyRegained", NULL);
                     association->set_property("Associations", associationsOk);
                 }
-                else if (psuPreviousWorkable <= redundancyPSURequire)
+                else if (psuPreviousWorkable < redundantCount())
                 {
                     // Not all PSU can work correctly but system still in
                     // redundancy mode and previous status is non redundant
@@ -927,7 +925,7 @@ void ColdRedundancy::checkRedundancyEvent()
         }
         else if (psuWorkable < psuPreviousWorkable)
         {
-            if (psuWorkable > redundancyPSURequire)
+            if (psuWorkable >= redundantCount())
             {
                 // One PSU is now not workable, but other workable PSU can still
                 // support redundancy mode.
@@ -950,7 +948,7 @@ void ColdRedundancy::checkRedundancyEvent()
             }
             else
             {
-                if (psuPreviousWorkable > redundancyPSURequire)
+                if (psuPreviousWorkable >= redundantCount())
                 {
                     // No enough workable PSU to support redundancy and
                     // previously system is in redundancy mode.

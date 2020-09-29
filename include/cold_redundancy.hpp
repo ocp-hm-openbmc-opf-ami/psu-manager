@@ -14,6 +14,8 @@
 // limitations under the License.
 */
 
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/asio/object_server.hpp>
 #include <utility.hpp>
 #include <xyz/openbmc_project/Control/PowerSupplyRedundancy/server.hpp>

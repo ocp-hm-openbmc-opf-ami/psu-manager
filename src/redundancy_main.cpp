@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include <boost/asio/io_service.hpp>
 #include <cold_redundancy.hpp>
 #include <sdbusplus/asio/object_server.hpp>
 

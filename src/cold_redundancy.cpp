@@ -76,8 +76,9 @@ ColdRedundancy::ColdRedundancy(
         std::cerr << "error initializing assoc interface\n";
     }
 
+    // For RP platforms, default cold redundancy should be disabled.
+    powerSupplyRedundancyEnabled(false);
     // set default configuration
-    powerSupplyRedundancyEnabled(true);
     rotationEnabled(true);
     periodOfRotation(7 * oneDay);
     rotationAlgorithm(Algo::bmcSpecific);
@@ -867,6 +868,10 @@ void ColdRedundancy::readPmbus(uint8_t bus, uint8_t slaveAddr, int& value)
 
 void ColdRedundancy::checkRedundancyEvent()
 {
+    if (!crSupported || !powerSupplyRedundancyEnabled())
+    {
+        return;
+    }
     puRedundantTimer.expires_after(std::chrono::seconds(2));
     puRedundantTimer.async_wait([this](const boost::system::error_code& ec) {
         if (ec == boost::asio::error::operation_aborted)

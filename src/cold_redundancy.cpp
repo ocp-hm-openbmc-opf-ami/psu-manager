@@ -575,7 +575,7 @@ void ColdRedundancy::keepAliveCheck(void)
     });
 }
 
-uint8_t ColdRedundancy::pSUNumber() const
+uint8_t ColdRedundancy::psuNumber() const
 {
     return numberOfPSU;
 }

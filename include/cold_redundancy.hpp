@@ -20,6 +20,10 @@
 #include <utility.hpp>
 #include <xyz/openbmc_project/Control/PowerSupplyRedundancy/server.hpp>
 
+#if !SDBUSPP_NEW_CAMELCASE
+#define psuNumber pSUNumber
+#endif
+
 const constexpr char* psuInterface =
     "/xyz/openbmc_project/inventory/system/powersupply/";
 const constexpr int oneDay = 86400;
@@ -45,7 +49,7 @@ class ColdRedundancy
         objServer.remove_interface(association);
     };
 
-    uint8_t pSUNumber() const override;
+    uint8_t psuNumber() const override;
     void
         createPSU(boost::asio::io_service& io,
                   sdbusplus::asio::object_server& objectServer,

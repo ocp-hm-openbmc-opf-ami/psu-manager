@@ -591,6 +591,31 @@ PowerSupply::PowerSupply(
     {
         std::cerr << "psu state " << static_cast<int>(state) << "\n";
     }
+    logVersion();
+}
+
+void PowerSupply::logVersion()
+{
+    constexpr uint8_t deviceRevOffset = 0xD9;
+    constexpr int readLength = 4;
+    uint8_t byteArr[readLength];
+    if (i2cGet(bus, address, deviceRevOffset, readLength, byteArr) !=
+        readLength)
+    {
+        std::cerr << "Failure to read Power Supply version!\n";
+        return;
+    }
+    std::string version = "VERSION INFO - " + name + " - ";
+    // First byte of byteArr is the number of bytes read, so it is skipped.
+    for (int i = 1; i < readLength; i++)
+    {
+        version += std::to_string(unsigned(byteArr[i]));
+        if (i != (readLength - 1))
+        {
+            version += ".";
+        }
+    }
+    std::cout << version << "\n";
 }
 
 // Reranking PSU orders with ascending order, if any of the PSU is not in

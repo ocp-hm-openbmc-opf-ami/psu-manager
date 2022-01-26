@@ -198,6 +198,65 @@ int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int& value)
     return 0;
 }
 
+// Performs i2c block read
+int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int readLength,
+           uint8_t* value)
+{
+    if (value == nullptr)
+    {
+        lg2::error("i2cGet passed nullptr value array!");
+        return -1;
+    }
+
+    std::string devPath = "/dev/i2c-" + std::to_string(bus);
+
+    int fd = ::open(devPath.c_str(), O_RDWR);
+    if (fd < 0)
+    {
+        lg2::error("Error in open!", "PATH", devPath.c_str(),
+            "SLAVEADDR", lg2::hex, slaveAddr);
+        return -1;
+    }
+
+    if (::ioctl(fd, I2C_SLAVE_FORCE, slaveAddr) < 0)
+    {
+        lg2::error("Error in I2C_SLAVE_FORCE!", "PATH", devPath.c_str(),
+            "SLAVEADDR", lg2::hex, slaveAddr);
+        ::close(fd);
+        return -1;
+    }
+
+    unsigned long funcs = 0;
+    if (::ioctl(fd, I2C_FUNCS, &funcs) < 0)
+    {
+        lg2::error("Error in I2C_FUNCS!", "PATH", devPath.c_str(),
+            "SLAVEADDR", lg2::hex, slaveAddr);
+        ::close(fd);
+        return -1;
+    }
+
+    if (!(funcs & I2C_FUNC_SMBUS_BLOCK_DATA) ||
+        !(funcs & I2C_FUNC_SMBUS_I2C_BLOCK))
+    {
+        lg2::error("i2c bus does not support block read!", "PATH", devPath.c_str(),
+            "SLAVEADDR", lg2::hex, slaveAddr);
+        ::close(fd);
+        return -1;
+    }
+
+    int length =
+        ::i2c_smbus_read_i2c_block_data(fd, regAddr, readLength, value);
+    if (length <= 0)
+    {
+            lg2::error("Error in i2c read!", "PATH", devPath.c_str(),
+                "SLAVEADDR", lg2::hex, slaveAddr);
+        ::close(fd);
+        return -1;
+    }
+    ::close(fd);
+    return length;
+}
+
 void getPSUEvent(const std::array<const char*, 1>& configTypes,
                  const std::shared_ptr<sdbusplus::asio::connection>& conn,
                  const std::string& psuName, PSUState& state)

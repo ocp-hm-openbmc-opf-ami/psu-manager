@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
+#include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/asio/connection.hpp>
 
 const constexpr char* entityManagerName = "xyz.openbmc_project.EntityManager";
@@ -57,5 +58,7 @@ void getPSUEvent(
 
 int i2cSet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, uint8_t value);
 int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int& value);
+int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int readLength,
+           uint8_t* value);
 int i2cPing(int fd, uint8_t slaveAddr);
 int setPingFd(int& fd, uint64_t bus);

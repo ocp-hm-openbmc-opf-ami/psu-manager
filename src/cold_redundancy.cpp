@@ -640,7 +640,19 @@ void ColdRedundancy::reRanking(void)
             {
                 psu->order = 0;
             }
-            orders[psuNumber++] = psu->order;
+            if (psuNumber < orders.size())
+            {
+                orders[psuNumber++] = psu->order;
+            }
+            else
+            {
+                static bool logOnlyOnce = false;
+                if (!logOnlyOnce)
+                {
+                    std::cerr << "RotationRankOrder less than number of PSUs\n";
+                    logOnlyOnce = true;
+                }
+            }
         }
         rotationRankOrder(orders);
     }

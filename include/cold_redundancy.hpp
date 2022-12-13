@@ -20,10 +20,6 @@
 #include <utility.hpp>
 #include <xyz/openbmc_project/Control/PowerSupplyRedundancy/server.hpp>
 
-#if !SDBUSPP_NEW_CAMELCASE
-#define psuNumber pSUNumber
-#endif
-
 const constexpr char* psuInterface =
     "/xyz/openbmc_project/inventory/system/powersupply/";
 const constexpr int oneDay = 86400;

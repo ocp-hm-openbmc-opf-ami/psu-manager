@@ -45,10 +45,12 @@ target_link_libraries (psuredundancy phosphor_dbus)
 include_directories (${LOGGING_INCLUDE_DIRS})
 link_directories (${LOGGING_LIBRARY_DIRS})
 
+find_package (PkgConfig REQUIRED)
+pkg_get_variable(SYSTEMD_SYSTEM_UNIT_DIR systemd systemdsystemunitdir)
+
 set (SERVICE_FILE_SRC_DIR ${PROJECT_SOURCE_DIR}/service_files)
-set (SERVICE_FILE_INSTALL_DIR /lib/systemd/system/)
 
 install (TARGETS psuredundancy DESTINATION bin)
 install (FILES
              ${SERVICE_FILE_SRC_DIR}/xyz.openbmc_project.coldredundancy.service
-             DESTINATION ${SERVICE_FILE_INSTALL_DIR})
+             DESTINATION "${SYSTEMD_SYSTEM_UNIT_DIR}")

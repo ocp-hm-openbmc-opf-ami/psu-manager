@@ -66,8 +66,8 @@ class ColdRedundancy
     void reRanking(void);
     void putWarmRedundant(void);
     void keepAliveCheck(void);
-    void writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value);
-    void readPmbus(uint8_t bus, uint8_t slaveAddr, int& value);
+    void writePmbus(uint8_t bus, uint8_t targetAddr, uint8_t value);
+    void readPmbus(uint8_t bus, uint8_t targetAddr, int& value);
     void checkRedundancyEvent(void);
     void saveConfig(void);
     void saveProperty(std::string propertyName, crConfigVariant value);

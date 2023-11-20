@@ -56,9 +56,9 @@ void getPSUEvent(
     const std::shared_ptr<sdbusplus::asio::connection>& dbusConnection,
     const std::string& psuName, PSUState& state);
 
-int i2cSet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, uint8_t value);
-int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int& value);
-int i2cGet(uint8_t bus, uint8_t slaveAddr, uint8_t regAddr, int readLength,
+int i2cSet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, uint8_t value);
+int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int& value);
+int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int readLength,
            uint8_t* value);
-int i2cPing(int fd, uint8_t slaveAddr);
+int i2cPing(int fd, uint8_t targetAddr);
 int setPingFd(int& fd, uint64_t bus);

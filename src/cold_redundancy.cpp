@@ -17,7 +17,7 @@
 #include <array>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/container/flat_set.hpp>
 #include <cold_redundancy.hpp>
@@ -50,7 +50,7 @@ static uint8_t psuRescanBus = 7;
 static int pingFd = -1;
 
 ColdRedundancy::ColdRedundancy(
-    boost::asio::io_service& io, sdbusplus::asio::object_server& objectServer,
+    boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
     std::shared_ptr<sdbusplus::asio::connection>& systemBus,
     std::vector<std::unique_ptr<sdbusplus::bus::match::match>>& matches) :
     sdbusplus::xyz::openbmc_project::Control::server::PowerSupplyRedundancy(
@@ -134,7 +134,7 @@ ColdRedundancy::ColdRedundancy(
         "org.freedesktop.DBus.Properties", "GetAll",
         "xyz.openbmc_project.Control.PowerSupplyRedundancy");
 
-    io.post([this, &io, &objectServer, &systemBus]() {
+    boost::asio::post(io, [this, &io, &objectServer, &systemBus]() {
         createPSU(io, objectServer, systemBus);
     });
     std::function<void(sdbusplus::message::message&)> eventHandler =
@@ -396,7 +396,7 @@ static const constexpr int psuDepth = 3;
 // Check PSU information from entity-manager D-Bus interface and use the bus
 // address to create PSU Class for cold redundancy.
 void ColdRedundancy::createPSU(
-    boost::asio::io_service& io, sdbusplus::asio::object_server& objectServer,
+    boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
     std::shared_ptr<sdbusplus::asio::connection>& conn)
 {
     // call mapper to get matched obj paths

@@ -17,7 +17,7 @@
 #include <array>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/container/flat_set.hpp>
 #include <cold_redundancy.hpp>
@@ -50,7 +50,7 @@ static uint8_t psuRescanBus = 7;
 static int pingFd = -1;
 
 ColdRedundancy::ColdRedundancy(
-    boost::asio::io_service& io, sdbusplus::asio::object_server& objectServer,
+    boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
     std::shared_ptr<sdbusplus::asio::connection>& systemBus,
     std::vector<std::unique_ptr<sdbusplus::bus::match::match>>& matches) :
     sdbusplus::xyz::openbmc_project::Control::server::PowerSupplyRedundancy(
@@ -134,7 +134,7 @@ ColdRedundancy::ColdRedundancy(
         "org.freedesktop.DBus.Properties", "GetAll",
         "xyz.openbmc_project.Control.PowerSupplyRedundancy");
 
-    io.post([this, &io, &objectServer, &systemBus]() {
+    boost::asio::post(io, [this, &io, &objectServer, &systemBus]() {
         createPSU(io, objectServer, systemBus);
     });
     std::function<void(sdbusplus::message::message&)> eventHandler =
@@ -396,7 +396,7 @@ static const constexpr int psuDepth = 3;
 // Check PSU information from entity-manager D-Bus interface and use the bus
 // address to create PSU Class for cold redundancy.
 void ColdRedundancy::createPSU(
-    boost::asio::io_service& io, sdbusplus::asio::object_server& objectServer,
+    boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
     std::shared_ptr<sdbusplus::asio::connection>& conn)
 {
     // call mapper to get matched obj paths
@@ -861,7 +861,7 @@ PowerSupply::~PowerSupply()
 {
 }
 
-void ColdRedundancy::writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value)
+void ColdRedundancy::writePmbus(uint8_t bus, uint8_t targetAddr, uint8_t value)
 {
     int i = 0;
     int tmpValue = -1;
@@ -873,13 +873,13 @@ void ColdRedundancy::writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value)
             std::cerr << "i2cset retry: " + std::to_string(i) + "\n";
         }
 
-        if (i2cSet(bus, slaveAddr, pmbusCmdCRSupport, value))
+        if (i2cSet(bus, targetAddr, pmbusCmdCRSupport, value))
         {
             std::cerr << "Failed to call i2cset\n";
             continue;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        if (i2cGet(bus, slaveAddr, pmbusCmdCRSupport, tmpValue))
+        if (i2cGet(bus, targetAddr, pmbusCmdCRSupport, tmpValue))
         {
             std::cerr << "Failed to call i2cget\n";
             continue;
@@ -887,13 +887,13 @@ void ColdRedundancy::writePmbus(uint8_t bus, uint8_t slaveAddr, uint8_t value)
     } while (i++ < retryCount && tmpValue != value);
 }
 
-void ColdRedundancy::readPmbus(uint8_t bus, uint8_t slaveAddr, int& value)
+void ColdRedundancy::readPmbus(uint8_t bus, uint8_t targetAddr, int& value)
 {
     int i = 0;
     int ret = -1;
     do
     {
-        ret = i2cGet(bus, slaveAddr, pmbusCmdCRSupport, value);
+        ret = i2cGet(bus, targetAddr, pmbusCmdCRSupport, value);
         if (ret)
         {
             std::cerr << "Failed to call i2cget, retry: " + std::to_string(i) +

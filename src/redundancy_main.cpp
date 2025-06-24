@@ -14,13 +14,13 @@
 // limitations under the License.
 */
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <cold_redundancy.hpp>
 #include <sdbusplus/asio/object_server.hpp>
 
 int main(int argc, char** argv)
 {
-    boost::asio::io_service io;
+    boost::asio::io_context io;
     auto systemBus = std::make_shared<sdbusplus::asio::connection>(io);
     std::vector<std::unique_ptr<sdbusplus::bus::match::match>> matches;
 

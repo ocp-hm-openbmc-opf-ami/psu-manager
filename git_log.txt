@@ -1,0 +1,621 @@
+commit bcb9a2bc20caa069683a1a17b0cb34afe6edff18
+Author: smahankx <satish.kumarx.mahankali@intel.com>
+Date:   Wed Jun 3 15:17:22 2026 +0530
+
+    Coverity: Fix misc. issues (#22)
+    
+    * fix: addressed the coverity issues
+    
+    * coverity: updated review comments
+
+commit 252bfa83a3f211ae8d3a5920710c242f7bfe3c95
+Author: Maciej Stanczew <maciej.stanczew@intel.com>
+Date:   Wed Jul 9 11:59:57 2025 +0200
+
+    README: Add information about external dependencies (#14)
+    
+    * Wrap JSON in code blocks
+    
+    * Add blank lines around paragraphs
+    
+    * Run prettier tool on README
+    
+    * Fix remaining issues found by markdownlint
+    
+    * Add information about external dependencies
+    
+    The dependencies could be more isolated (e.g. the contents of
+    'utility.cpp' could be split into 'i2c' and 'dbus' parts), but since
+    the project wasn't updated for some time, I preferred not to interfere
+    in the implementation, and so I just did the documentation part.
+
+commit 3a00a0fa8076c39b9b9b46f956ec5c74c1c5e360
+Author: Terry Duncan <terry.s.duncan@intel.com>
+Date:   Thu May 1 09:05:31 2025 -0700
+
+    Revert license collab (#15)
+    
+    * Revert "According LICENSE-collab.md to intel-collab policy"
+    
+    This reverts commit 1da77e30403ef00f2c65383188987cd6ac4182c2.
+    
+    * Revert "According README-collab.md to intel-collab policy"
+    
+    This reverts commit 0284c9998e36ad8be9790caf55627ccf3cbd7592.
+
+commit 1da77e30403ef00f2c65383188987cd6ac4182c2
+Author: sys-1sgithubsupport <sys_1sgithubsupport@intel.com>
+Date:   Fri Apr 25 04:56:47 2025 +0530
+
+    According LICENSE-collab.md to intel-collab policy
+
+commit 0284c9998e36ad8be9790caf55627ccf3cbd7592
+Author: sys-1sgithubsupport <sys_1sgithubsupport@intel.com>
+Date:   Fri Apr 25 04:56:46 2025 +0530
+
+    According README-collab.md to intel-collab policy
+
+commit fd3c23892ddf7b0e24672b4fd02d63ca89e3996b
+Author: Jason M. Bills <jason.m.bills@intel.com>
+Date:   Wed Apr 23 07:55:32 2025 -0600
+
+    Update to C++23 (#13)
+    
+    Update to C++23 which is required for sdbusplus
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
+commit f2f8ab051932d6a94e2b0c63210a57c7afe0bd89
+Author: Jason M. Bills <jasonm.bills@yahoo.com>
+Date:   Thu Feb 27 08:58:07 2025 -0700
+
+    Fix build issues with boost 1.87 (#12)
+    
+    Update deprecated terminology that was removed in boost 1.87.
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
+commit c95de7e819e917e5e291962ec959d4bcd9945b8e
+Author: MattSimmering <simmeringmatt@gmail.com>
+Date:   Mon Nov 20 10:01:41 2023 -0800
+
+    Update language used within repo (#11)
+    
+    Update terminology to use more inclusive terms as per below guideline:
+    https://intel.sharepoint.com/sites/InclusiveLanguage/SitePages/Full-Guidance-for-Technologists.aspx
+    
+    Signed-off-by: Matt Simmering <matthew.simmering@intel.com>
+
+commit b049f4086a1c95e340d773b7905c39d491a90e7f
+Author: jmbills <jasonm.bills@yahoo.com>
+Date:   Fri Jun 30 12:35:16 2023 -0600
+
+    Use variable for service install location (#9)
+    
+    After enabling 'usrmerge', the install location for systemd service
+    files changed. This uses a variable to get the installation location
+    instead of hardcoding it.
+    
+    Tested:
+    Confirmed that with 'usrmerge' enabled, the service file is correctly
+    installed.
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
+commit faee016c8a51aa918df39a32447737de15b96543
+Author: jmbills <jasonm.bills@yahoo.com>
+Date:   Tue Dec 13 10:21:44 2022 -0700
+
+    Remove SDBUSPP_NEW_CAMELCASE (#6)
+    
+    Upstream sdbusplus removed this flag, so we are safe to remove it here,
+    too. This fixes the upstream sync build.
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
+commit 5798ef236a83cab2b616321718414fe71d9aacd5
+Author: Arun P. Mohanan <arun.p.m@linux.intel.com>
+Date:   Tue Feb 15 19:28:08 2022 +0530
+
+    Add vector size check (#5)
+    
+    When PowerSupplyRedundancyEnabled is set to true and RotationRankOrder
+    is 0, xyz.openbmc_project.coldredundancy.service core-dump issue
+    is observed.
+    
+    Add a check to address above corner case and avoid core-dump.
+    
+    Tested:
+    Verified core-dump is not observed with above settings
+    
+    Feb 15 11:39:25 intel-obmc psuredundancy[18502]: RotationRankOrder less than number of PSUs
+    
+    Signed-off-by: Arun P. Mohanan <arun.p.m@linux.intel.com>
+
+commit 6cf2ac37a30abd55227a01d6a89bfaec738810e5
+Author: Wiktor Golgowski <wiktor.golgowski@intel.com>
+Date:   Wed Jan 26 13:01:59 2022 +0100
+
+    Add PSU FW Version in journalctl log
+    
+    * Add PSU FW Version in journalctl log
+    
+    Adds version logging for PSU active version on every AC cycle and
+    BMC reboot.
+    For each PSU (number Y), the logging format is as follows:
+    Log format: VERSION INFO - PSUY - <version info>
+    Where <version info> is the set of letters and numbers describing the
+    version.
+    User can retrieve FW versions by running:
+    journalctl | grep "VERSION INFO":
+    
+    Tested:
+    AC cycle:
+    VERSION INFO - PSU1 - XX.X.XXX
+    
+    BMC reboot:
+    VERSION INFO - PSU1 - XX.X.XXX
+    
+    Change-Id: Ic0b6b2cc234745e1f3eae5362529d086e1ebb8a2
+    Signed-off-by: Alex Schendel <alex.schendel@intel.com>
+
+commit 7d568d100fc614657be301216378dab928fa25ff
+Author: Alex Schendel <lexden.s@gmail.com>
+Date:   Fri Jan 21 11:23:18 2022 -0800
+
+    Updating CMakeLists to C++20 (#2)
+    
+    Change-Id: I84a98de8247b61b31432b4f920c375f5912b775f
+    Signed-off-by: Alex Schendel <alex.schendel@intel.com>
+
+commit 30788892792c302b1317bac4e7f837ca1374d789
+Author: Manish Baing <manish.baing@intel.com>
+Date:   Tue Oct 5 21:12:12 2021 +0000
+
+    Add README
+    
+    Add README.md file
+    
+    Change-Id: Icae391747442007c3cb69e9b47449658459216ce
+    Signed-off-by: Manish Baing <manish.baing@intel.com>
+
+commit 139981b813f2d480ca55f60e6b129d55d6adcbc3
+Author: Jonathan Doman <jonathan.doman@intel.com>
+Date:   Tue May 11 12:21:40 2021 -0700
+
+    Update D-Bus properties for new sdbus++ naming
+    
+    sdbus++ tool changed the generated D-Bus server binding code:
+    https://github.com/openbmc/sdbusplus/commit/98019e7419
+    
+    This commit updates to the new naming convention, with preprocessor
+    logic to build against either old or new naming.
+    
+    Tested: Build passes.
+    
+    Change-Id: I7cb27fb21ed767654f2863b4633e55f40c9b7d33
+    Signed-off-by: Jonathan Doman <jonathan.doman@intel.com>
+
+commit d14c350c2dfcf9da3e6088ef29a8c5be4e40079b
+Author: AppaRao Puli <apparao.puli@linux.intel.com>
+Date:   Wed Oct 7 22:42:26 2020 +0530
+
+    disable PSU cold redundancy
+    
+    In RP platforms, single PSU also considered as
+    valid configuration. We don't have user configuration
+    option to enable/disable PSU cold redundancy. So
+    it should be disabled by default to avoid issues in
+    Rp platforms.
+    
+    This avoids unwanted critical event logs and
+    unexpected LED status for RP platforms where
+    single PSU also considered as valid config.
+    
+    Tested:
+     - Rebooted BMC and observed no CR event logs and
+       no amber blinking of status LED.
+    
+    Change-Id: Ie0f1f3f8daa95593af6db698d65ea804cebfee87
+    Signed-off-by: AppaRao Puli <apparao.puli@linux.intel.com>
+
+commit a6dcc49f7513789931099be7948ba5b6a39e9c20
+Author: Zhikui Ren <zhikui.ren@intel.com>
+Date:   Tue Sep 29 12:21:49 2020 -0700
+
+    Add missing includes to build with upstream
+    
+    This is the same patch, reapply to the new repo
+    https://git-amr-2.devtools.intel.com/gerrit/#/c/273273/
+    
+    Change-Id: I46d92f1703d758affac7841c63a6fd3789bd4135
+    Signed-off-by: Zhikui Ren <zhikui.ren@intel.com>
+
+commit 9cf1f3fc92be6c06350c6a526023b28d0ab878b0
+Author: Kuiying Wang <kuiying.wang@intel.com>
+Date:   Tue Sep 1 17:06:31 2020 +0800
+
+    Add RedundantCount property.
+    
+    RedundantCount value is get from EM.
+    It is used by other service like bmcweb for redfish
+    interface on Power Redundancy.
+    Note: it depends on dbus-interface definition patch:
+    https://gerrit.openbmc-project.xyz/#/c/openbmc/phosphor-dbus-interfaces/+/36134/
+    
+    Tested:
+    introspect xyz.openbmc_project.PSURedundancy /xyz/openbmc_project/control/power_supply_redundancy
+    
+     xyz.openbmc_project.Control.PowerSupplyRedundancy interface -         -                                        -
+    
+     .ColdRedundancyStatus                             property  s         "xyz.openbmc_project.Control.PowerSup…d" emits-change writable
+    
+     .PSUNumber                                        property  y         2                                        emits-change writable
+    
+     .PeriodOfRotation                                 property  u         86400                                    emits-change writable
+    
+     .PowerSupplyRedundancyEnabled                     property  b         true                                     const
+    
+     .RedundantCount                                   property  y         2                                        emits-change writable
+    
+     .RotationAlgorithm                                property  s         "xyz.openbmc_project.Control.PowerSup…c" emits-change writable
+    
+     .RotationEnabled                                  property  b         true                                     emits-change writable
+    
+     .RotationRankOrder                                property  ay        2 1 2                                    emits-change writable
+    
+    Change-Id: I20e395b14515f916cb13dd0cdfb15491bda0dda3
+    Signed-off-by: Kuiying Wang <kuiying.wang@intel.com>
+
+commit f35e4941c3de42f32005b57beab83243299154c3
+Author: Kuiying Wang <kuiying.wang@intel.com>
+Date:   Tue Jul 14 18:14:07 2020 +0800
+
+    Fix PSU cold redundancy issue.
+    
+    Cold redundancy service is not runing as user configuration.
+    1. Set limitation for period of rotation
+    According to the EPS set the Minimum Rotation period to 1 day,
+    Maximum Rotation period to 6 months
+    2. Remove wrong timer.
+    3. In sometime i2cSet may not success
+       Defined retry function for both i2cSet and i2cGet.
+    4. Make sure property sync with Settings service.
+    
+    Tested:
+    1. The out of range period is not accepted.
+    2. CR is runing as user configuration.
+    
+    Change-Id: I181d85a9eb41cd9c5c73b2d10eb5e24e471aca00
+    Signed-off-by: Kuiying Wang <kuiying.wang@intel.com>
+
+commit edcb1f2f9398c643fd52f7078ffd7098564879a3
+Author: Vernon Mauery <vernon.mauery@intel.com>
+Date:   Thu Jun 4 15:21:55 2020 -0700
+
+    replace sdbusplus::message::variant
+    
+    sdbusplus::message::variant is gone from sdbusplus, use std::variant
+    
+    Tested: builds as expected
+    
+    Change-Id: I0d359519ffe11f2eeabba1bc3943da306e7046d0
+    Signed-off-by: Vernon Mauery <vernon.mauery@intel.com>
+
+commit 31aa6fe765070a1915f45a231137f87d4931e2b0
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Wed Jan 22 10:58:39 2020 +0800
+
+    Only rescan FRU on pmbus when PSU changes
+    
+    When a new PSU is inserted, only rescan the FRU on pmbus instead of rescan
+    all the FRU on the system.
+    
+    Tested:
+    Insert a new PSU, Redfish can show correct FRU of this PSU.
+    
+    Change-Id: I6868210868dda8f5f9f5fc5a52dad472cb129f88
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 9761ba3a77502d60cdcb795087597721d9d5a26b
+Author: Yong Li <yong.b.li@linux.intel.com>
+Date:   Wed Nov 27 13:33:56 2019 +0800
+
+    Change the LED status for redundancy loss event
+    
+    EPS defines the redundancy loss as degraded state: Blinking green led.
+    The log priority should be warn, to align with redfish event log.
+    
+    Tested:
+    With two PSUs,
+    disconnected one PSU to trigger this event, the green led will blink.
+    
+    Change-Id: I66f654f31af8cc6749741bbad4eae6491492cf35
+    Signed-off-by: Yong Li <yong.b.li@linux.intel.com>
+
+commit 359588de39efc76ffd92947aa7dc500ad1d95dcd
+Author: Yong Li <yong.b.li@linux.intel.com>
+Date:   Tue Nov 19 18:25:01 2019 +0800
+
+    Sync configuration data between settings and PSU redundancy service
+    
+    Add support for reading configuration from settings service,
+    and store all these data into dbus;
+    
+    Rank order configuration needs to be queried from PSU redundancy service,
+    since it will be changed from time to time.
+    
+    Tested:
+    Applied https://gerrit.openbmc-project.xyz/#/c/openbmc/intel-ipmi-oem/+/27220/,
+    With two PSUs, AC cycle the board,
+    
+    // two PSUs available
+    ipmitool raw 0x30 0x2E 0x05
+    05 02
+    // Return the default order 0,0, instead of the default settings is 0
+    root@intel-obmc:~# ipmitool raw 0x30 0x2E 0x03
+    03 01 00 00
+    
+    Wait for 2 minutes, the order will be changed to ascending order,
+    and start the rotation
+    ipmitool raw 0x30 0x2e 0x3
+     03 00 01 02
+    
+    // Set a new order 1,2
+    root@intel-obmc:~# ipmitool raw 0x30 0x2d 0x03 0x01 0x01 0x02
+    00
+    // Return the new order
+    root@intel-obmc:~# ipmitool raw 0x30 0x2E 0x03
+    03 01 01 02
+    
+    Signed-off-by: Yong Li <yong.b.li@linux.intel.com>
+    Change-Id: I50c469ae7b2f089d3e7cc70932e5eed4f7164f74
+
+commit 956c1dc439e5756cca201677c0212c4fc81dbf27
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Wed Nov 6 15:21:30 2019 +0800
+
+    Add LED Support for Power Redundancy
+    
+    Add status LED support for Power Unit Redundancy.
+    
+    Tested:
+    AC off or remove one PSU, status LED changes to amber blinking.
+    AC on the PSU again, status LED changes back to solid green.
+    
+    Change-Id: I86c9e03c0e2a5f035a6bf5140c850c1551fb40a7
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 10601319ab90f9cede8e3853f21fd1ac0b18bc03
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Tue Oct 29 14:58:41 2019 +0800
+
+    Fix PSU number incorrect issue.
+    
+    When remove PSU2, it will report PSU1 removed log. Correct this logic
+    bug.
+    
+    Tested:
+    Remove PSU2, PSU2 removed Redfish log is recorded. Insert PSU2, PSU2
+    inserted Redfish log is recorded.
+    
+    Change-Id: Ifba3175b6ac965cb35de2283d59b7b058985fe0b
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit e3951666642a9fcef81584734089b2d00d19b29b
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Thu Oct 17 10:51:29 2019 +0800
+
+    Fix keeping printing i2c error issue
+    
+    i2cget function in cold redundancy will keep printing i2c error message in BMC
+    debug console when there is only one PSU in the system. Add a ping flag to fix
+    this.
+    
+    Tested:
+    Only insert one PSU, BMC console will not keep printing i2c error message.
+    
+    Change-Id: I639b7fe036fd383fbdbc4c4868c77560cc91a63c
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit cf337fe7c5646d24b264cbd26cb93deea51810cf
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Tue Oct 8 00:17:17 2019 +0800
+
+    Implement Power Unit Redundancy
+    
+    Implement Power Unit Redundancy, when PSU numbers has been changed or any PSU
+    event happen, Power Unit Redundancy event may be triggered.
+    
+    Tested:
+    With the related change on Redfish Event Log in bmcweb, when there are two PSU
+    on the sytem, remove one AC cable on PSU. Then bellow Redfish log will be
+    created.
+    {
+        "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+        "@odata.id": "/redfish/v1/Systems/system/LogServices/EventLog/Entries/
+    205610",
+        "@odata.type": "#LogEntry.v1_4_0.LogEntry",
+        "Created": "1970-01-03T09:06:50+00:00",
+        "EntryType": "Event",
+        "Id": "205610",
+        "Message": "Power Unit Redundancy lost.",
+        "MessageArgs": [],
+        "MessageId": "OpenBMC.0.1.PowerUnitRedundancyLost",
+        "Name": "System Event Log Entry",
+        "Severity": "Warning"
+    },
+    {
+            "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+        "@odata.id": "/redfish/v1/Systems/system/LogServices/EventLog/Entries/
+    205610_1",
+        "@odata.type": "#LogEntry.v1_4_0.LogEntry",
+        "Created": "1970-01-03T09:06:50+00:00",
+        "EntryType": "Event",
+        "Id": "205610_1",
+        "Message": "Power Unit Nonredundant but has sufficient resource.",
+        "MessageArgs": [],
+        "MessageId": "OpenBMC.0.1.PowerUnitNonRedundantSufficient",
+        "Name": "System Event Log Entry",
+        "Severity": "Warning"
+    },
+    Plug in the AC cable again, the Redfish log will show
+    {
+        "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+        "@odata.id": "/redfish/v1/Systems/system/LogServices/EventLog/Entries/
+    205621",
+        "@odata.type": "#LogEntry.v1_4_0.LogEntry",
+        "Created": "1970-01-03T09:07:01+00:00",
+        "EntryType": "Event",
+        "Id": "205621",
+        "Message": "Power Unit Redundancy regained.",
+        "MessageArgs": [],
+        "MessageId": "OpenBMC.0.1.PowerUnitRedundancyRegained",
+        "Name": "System Event Log Entry",
+        "Severity": "OK"
+    }
+    
+    Change-Id: Id20a1ccf83497fd5982c9dfee9c972895f395112
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit a873e9283a380a9bedec61cbbc74f180e8f09a40
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Tue Sep 10 21:41:30 2019 +0800
+
+    Fix no PSU remove and insert log.
+    
+    Fix the problem that after removed or inserted PSU, no related Redfish log is
+    asserted.
+    
+    Tested:
+    Remove one PSU, PowerSupplyRemoved log has been recorded.
+    Insert the PSU again, PowerSupplyInserted log has been recorded.
+    
+    Change-Id: I7bd2563e7f7c15a60e506a21ce31ec6f71309735
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 2373de7afb1c90c999a7ee55ce052c543f3cea8b
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Fri Aug 16 23:02:58 2019 +0800
+
+    Add keep alive function for PSU
+    
+    Add keep alive function to monitor the FRU of PSU. If FRU cannot be
+    accessed, it means one PSU have been removed, need to rescan FRU.
+    
+    Tested:
+    Only insert one PSU and start system. Check entity-manager, only one
+    PSU will be found. Insert another PSU then, wait for a while and check
+    entity-manager again, two PSU should be found now, add redfish log show
+    {
+        "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+        "@odata.id": "/redfish/v1/Systems/system/LogServices/EventLog/Entries/
+    1563892418",
+        "@odata.type": "#LogEntry.v1_4_0.LogEntry",
+        "Created": "2019-07-23T14:33:38+00:00",
+        "EntryType": "Event",
+        "Id": "1563892418",
+        "Message": "Power supply PSU1 inserted.",
+        "MessageArgs": [
+            "PSU0"
+        ],
+        "MessageId": "OpenBMC.0.1.PowerSupplyInserted",
+        "Name": "System Event Log Entry",
+        "Severity": "OK"
+    },
+    Then remove one PSU again, now only one PSU should be showed in entity-manager.
+    And redfish log show:
+    {
+        "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+        "@odata.id": "/redfish/v1/Systems/system/LogServices/EventLog/Entries/
+    1563892532",
+        "@odata.type": "#LogEntry.v1_4_0.LogEntry",
+        "Created": "2019-07-23T14:35:32+00:00",
+        "EntryType": "Event",
+        "Id": "1563892532",
+        "Message": "Power supply PSU1 removed.",
+        "MessageArgs": [
+            "PSU0"
+        ],
+        "MessageId": "OpenBMC.0.1.PowerSupplyRemoved",
+        "Name": "System Event Log Entry",
+        "Severity": "Warning"
+    },
+    
+    Change-Id: Icbd70407892a334a52208e5fa6da1c4bbd75bcab
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 6105233f516885c991ef2b43c894618c371f7bc2
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Thu Aug 8 09:54:20 2019 +0800
+
+    Support Cold Redundancy ipmi command
+    
+    Support ipmi command or redfish to change Cold Redundancy related
+    config parameters.
+    
+    Tested:
+    With Cold Redundancy ipmi command code change, run ipmi command to
+    change config paramters - RotationEnable, RotationAlgorithm,
+    RotationRankOrder, periodOfRotation and PowerSupplyRedundancyEnabled,
+    the parameters in Cold Redundancy service will also be changed.
+    
+    Change-Id: I254553c7c9f1a2e33ef07a17433bd1ecd8a992f1
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 93023d0379e5d88221314bef3b33a5de8dbdab3a
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Wed Aug 7 08:01:32 2019 +0800
+
+    Checking PSU event to set PSU status
+    
+    Checking PSU event to see if PSUs are normal status or not.
+    
+    Tested:
+    Remove one PSU, check the PSU status is in ACLost.
+    
+    Change-Id: I1d83e1544d77adeed0b8961be5ae470330b5e9ab
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 2e568a0aeeecd7dd464867d0d7a25376b758b06d
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Thu Aug 1 07:24:19 2019 +0800
+
+    Implement basic function of Cold Redundancy
+    
+    Implement basic function of Cold Redundancy include rotation, config,
+    check and reRanking.
+    
+    Tested:
+    Change rotationPeriod to a smaller value such as 60 seconds. Insert
+    two PSU on system, and check PSU rank order register 0xd0. After 60s
+    The value of rank order in PSU1 will change to 2, and the value of
+    rank order in PSU2 will change to 1.
+    If removed AC Cable on one PSU. The rank order in this PSU will be
+    always 0, and the rank order in the other PSU will be always 1.
+    
+    Change-Id: Idc14f783ec83db005ecf9fc53332431ba6a6daee
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit c1320a09dc45e37caafd4fdc45b2e75f4c988811
+Author: Cheng C Yang <cheng.c.yang@intel.com>
+Date:   Sat Jul 27 07:22:19 2019 +0800
+
+    Update first patch for Cold Redundancy
+    
+    Update first patch for PowerSupply Cold Redundancy feature.
+    The first patch will get PSU information from entity manager and
+    base on the information, create PSU class for Cold Redundancy.
+    
+    Tested:
+    With later Cold Redundancy patch, basic function, keep alive and
+    PSU status all can work correctly.
+    
+    Change-Id: Ib2279043c0cbfade9c02f4107ae2137af17ba942
+    Signed-off-by: Cheng C Yang <cheng.c.yang@intel.com>
+
+commit 932c96e6ee4e9c325c0cabb3dcd67654c10ea573
+Author: SCM Administrator <NoEmailShouldEverBeSentToSCMAdmin>
+Date:   Fri Sep 25 12:07:35 2020 -0700
+
+    Initial empty repository

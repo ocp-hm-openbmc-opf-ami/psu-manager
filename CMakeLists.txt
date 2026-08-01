@@ -25,6 +25,11 @@ add_definitions (-DBOOST_NO_RTTI)
 add_definitions (-DBOOST_NO_TYPEID)
 add_definitions (-DBOOST_ASIO_DISABLE_THREADS)
 
+option (DNL_FEATURES "Enable DNL platform-specific features" OFF)
+if (DNL_FEATURES)
+    add_compile_definitions (DNL_FEATURES)
+endif ()
+
 link_directories (${EXTERNAL_INSTALL_LOCATION}/lib)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -1,3 +1,14 @@
+commit 0daa18a148407b5c79a00beff1b8800d8f8be927
+Author: Utkarsh Kumar <utkarshx.kumar@intel.com>
+Date:   Tue Jul 14 15:30:09 2026 +0530
+
+    dnl: Fix to avoid the detection of PMBUS2 sensor version (#23)
+    
+    Fix to avoid the detection of PMBUS2 sensor version by
+    psuredundancy service.
+    
+    Signed-off-by: Utkarsh Kumar <utkarshx.kumar@intel.com>
+
 commit bcb9a2bc20caa069683a1a17b0cb34afe6edff18
 Author: smahankx <satish.kumarx.mahankali@intel.com>
 Date:   Wed Jun 3 15:17:22 2026 +0530

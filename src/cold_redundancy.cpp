@@ -591,7 +591,14 @@ PowerSupply::PowerSupply(
     {
         std::cerr << "psu state " << static_cast<int>(state) << "\n";
     }
+#ifdef DNL_FEATURES
+    if (bus == 7)
+    {
+        logVersion();
+    }
+#else
     logVersion();
+#endif
 }
 
 void PowerSupply::logVersion()

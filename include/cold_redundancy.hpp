@@ -100,6 +100,7 @@ class PowerSupply
     uint8_t bus;
     uint8_t address;
     PSUState state = PSUState::normal;
+
   private:
     void logVersion();
 };

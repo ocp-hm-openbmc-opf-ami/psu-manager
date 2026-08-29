@@ -1,3 +1,21 @@
+commit 2ccb8d0dd981ab82b219365fec6a6492611667d9
+Author: Jason M. Bills <jason.m.bills@intel.com>
+Date:   Tue Aug 18 09:21:31 2026 -0600
+
+    Update minimum CMake version to 3.5 (#24)
+    
+    Also update a dependency
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
+commit 8c6dfebfd2f7eee12044f7efe72be7ce34a475c6
+Author: Jason M. Bills <jason.m.bills@intel.com>
+Date:   Tue Aug 18 09:11:02 2026 -0600
+
+    Apply clang-formatting (#25)
+    
+    Signed-off-by: Jason M. Bills <jason.m.bills@intel.com>
+
 commit 0daa18a148407b5c79a00beff1b8800d8f8be927
 Author: Utkarsh Kumar <utkarshx.kumar@intel.com>
 Date:   Tue Jul 14 15:30:09 2026 +0530

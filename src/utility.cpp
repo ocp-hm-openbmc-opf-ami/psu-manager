@@ -213,15 +213,15 @@ int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int readLength,
     int fd = ::open(devPath.c_str(), O_RDWR);
     if (fd < 0)
     {
-        lg2::error("Error in open!", "PATH", devPath.c_str(),
-            "TARGETADDR", lg2::hex, targetAddr);
+        lg2::error("Error in open!", "PATH", devPath.c_str(), "TARGETADDR",
+                   lg2::hex, targetAddr);
         return -1;
     }
 
     if (::ioctl(fd, I2C_SLAVE_FORCE, targetAddr) < 0)
     {
         lg2::error("Error in I2C_TARGET_FORCE!", "PATH", devPath.c_str(),
-            "TARGETADDR", lg2::hex, targetAddr);
+                   "TARGETADDR", lg2::hex, targetAddr);
         ::close(fd);
         return -1;
     }
@@ -229,8 +229,8 @@ int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int readLength,
     unsigned long funcs = 0;
     if (::ioctl(fd, I2C_FUNCS, &funcs) < 0)
     {
-        lg2::error("Error in I2C_FUNCS!", "PATH", devPath.c_str(),
-            "TARGETADDR", lg2::hex, targetAddr);
+        lg2::error("Error in I2C_FUNCS!", "PATH", devPath.c_str(), "TARGETADDR",
+                   lg2::hex, targetAddr);
         ::close(fd);
         return -1;
     }
@@ -238,8 +238,8 @@ int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int readLength,
     if (!(funcs & I2C_FUNC_SMBUS_BLOCK_DATA) ||
         !(funcs & I2C_FUNC_SMBUS_I2C_BLOCK))
     {
-        lg2::error("i2c bus does not support block read!", "PATH", devPath.c_str(),
-            "TARGETADDR", lg2::hex, targetAddr);
+        lg2::error("i2c bus does not support block read!", "PATH",
+                   devPath.c_str(), "TARGETADDR", lg2::hex, targetAddr);
         ::close(fd);
         return -1;
     }
@@ -248,8 +248,8 @@ int i2cGet(uint8_t bus, uint8_t targetAddr, uint8_t regAddr, int readLength,
         ::i2c_smbus_read_i2c_block_data(fd, regAddr, readLength, value);
     if (length <= 0)
     {
-            lg2::error("Error in i2c read!", "PATH", devPath.c_str(),
-                "TARGETADDR", lg2::hex, targetAddr);
+        lg2::error("Error in i2c read!", "PATH", devPath.c_str(), "TARGETADDR",
+                   lg2::hex, targetAddr);
         ::close(fd);
         return -1;
     }

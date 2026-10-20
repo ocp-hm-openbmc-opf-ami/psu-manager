@@ -583,15 +583,21 @@ uint8_t ColdRedundancy::psuNumber() const
 PowerSupply::PowerSupply(
     std::string& name, uint8_t bus, uint8_t address, uint8_t order,
     const std::shared_ptr<sdbusplus::asio::connection>& dbusConnection) :
-    name(name),
-    bus(bus), address(address), order(order)
+    name(name), bus(bus), address(address), order(order)
 {
     getPSUEvent(psuEventInterface, dbusConnection, name, state);
     if (debug)
     {
         std::cerr << "psu state " << static_cast<int>(state) << "\n";
     }
+#ifdef DNL_FEATURES
+    if (bus == 7)
+    {
+        logVersion();
+    }
+#else
     logVersion();
+#endif
 }
 
 void PowerSupply::logVersion()

@@ -54,7 +54,6 @@ class ColdRedundancy
   private:
     bool crSupported = true;
     bool isRotating = false;
-    uint8_t psOrder;
     uint8_t numberOfPSU = 0;
     std::vector<uint8_t> settingsOrder = {};
 
@@ -101,6 +100,7 @@ class PowerSupply
     uint8_t bus;
     uint8_t address;
     PSUState state = PSUState::normal;
+
   private:
     void logVersion();
 };

@@ -20,14 +20,21 @@
 
 int main(int argc, char** argv)
 {
-    boost::asio::io_context io;
-    auto systemBus = std::make_shared<sdbusplus::asio::connection>(io);
-    std::vector<std::unique_ptr<sdbusplus::bus::match::match>> matches;
+    try
+    {
+        boost::asio::io_context io;
+        auto systemBus = std::make_shared<sdbusplus::asio::connection>(io);
+        std::vector<std::unique_ptr<sdbusplus::bus::match::match>> matches;
 
-    systemBus->request_name("xyz.openbmc_project.PSURedundancy");
-    sdbusplus::asio::object_server objectServer(systemBus);
+        systemBus->request_name("xyz.openbmc_project.PSURedundancy");
+        sdbusplus::asio::object_server objectServer(systemBus);
 
-    ColdRedundancy coldRedundancy(io, objectServer, systemBus, matches);
+        ColdRedundancy coldRedundancy(io, objectServer, systemBus, matches);
 
-    return 0;
+        return 0;
+    }
+    catch (...)
+    {
+        return 1;
+    }
 }

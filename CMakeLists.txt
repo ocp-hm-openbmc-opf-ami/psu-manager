@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.5 FATAL_ERROR)
 set (BUILD_SHARED_LIBRARIES OFF)
 include (ExternalProject)
 set (CMAKE_CXX_STANDARD 23)
@@ -25,6 +25,11 @@ add_definitions (-DBOOST_NO_RTTI)
 add_definitions (-DBOOST_NO_TYPEID)
 add_definitions (-DBOOST_ASIO_DISABLE_THREADS)
 
+option (DNL_FEATURES "Enable DNL platform-specific features" OFF)
+if (DNL_FEATURES)
+    add_compile_definitions (DNL_FEATURES)
+endif ()
+
 link_directories (${EXTERNAL_INSTALL_LOCATION}/lib)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -36,7 +41,6 @@ include_directories (${DBUSINTERFACE_INCLUDE_DIRS})
 link_directories (${DBUSINTERFACE_LIBRARY_DIRS})
 
 add_executable (psuredundancy ${PSU_CR_SRC_FILES} src/redundancy_main.cpp)
-add_dependencies (psuredundancy sdbusplus-project)
 target_link_libraries (psuredundancy ${CR_LINK_LIBS})
 target_link_libraries (psuredundancy i2c)
 target_link_libraries (psuredundancy phosphor_logging)
